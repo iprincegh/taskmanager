@@ -1,120 +1,167 @@
-from datetime import datetime
+import sys
+from PyQt5.QtWidgets import (
+    QApplication, QComboBox, QMainWindow, QVBoxLayout, QDateEdit, QWidget, QPushButton, QListWidget, QLineEdit, QHBoxLayout, QMessageBox, QCheckBox
+)
+from PyQt5.QtCore import QDate
+from PyQt5.QtGui import QColor, QBrush, QFont, QIcon
 
-class Task:
-    def __init__(self, name, priority, due_date=None):
-        self.name = name
-        self.priority = priority
-        self.is_completed = False
-        self.due_date = due_date
-
-    def __str__(self):
-        status = "completed" if self.is_completed else "Pending"
-        due_date_str = self.due_date.strftime("%Y-%m-%d") if self.due_date else "No due date"
-        return f"{self.name} - {self.priority.capitalize()} Priority - {status} - Due: {due_date_str}"
-
-class TaskManager:
+class TaskManagerGUI(QMainWindow):
     def __init__(self):
-        self.tasks = []
+        super().__init__()
+        self.initUI()
 
-    def add_task(self):
-        name = input("Enter Task Name: ").strip()
-        priority = input("Enter Task Priority [high, medium, low]: ").strip().lower()
-        due_date_str = input("Enter Due Date (YYYY-MM-DD) [optional]: ").strip()
+    def initUI(self):
+        self.setWindowTitle('Priority Task Manager')
+        self.setGeometry(100, 100, 600, 400)
 
-        if priority not in {"high", "medium", "low"}:
-            print("Invalid Priority. Task not added.")
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+
+        main_layout = QVBoxLayout()
+        form_layout = QHBoxLayout()
+
+        # Widgets
+        self.taskList = QListWidget()
+        self.taskList.setSelectionMode(QListWidget.MultiSelection)
+
+        self.taskName = QLineEdit()
+        self.taskName.setPlaceholderText('Enter task name')
+
+        self.taskPriority = QComboBox()
+        self.taskPriority.addItem('Select task priority')
+        self.taskPriority.addItem(QIcon('high.png'), 'High')
+        self.taskPriority.addItem(QIcon('medium.png'), 'Medium')
+        self.taskPriority.addItem(QIcon('low.png'), 'Low')
+
+
+        self.taskDueDate = QDateEdit()
+        self.taskDueDate.setCalendarPopup(True)
+        self.taskDueDate.setDisplayFormat('yyyy-MM-dd')
+        self.taskDueDate.setDateRange(QDate.currentDate(), QDate(9999, 12, 31))
+
+        self.addTaskButton = QPushButton('Add Task')
+        self.deleteTaskButton = QPushButton('Delete Selected Task')
+        self.toggleStatusButton = QPushButton('Toggle Task Status')
+
+        self.showCompletedCheckbox = QCheckBox('Show Completed Tasks')
+        self.showCompletedCheckbox.setChecked(True)
+
+        # Add widgets to layouts
+        form_layout.addWidget(self.taskName)
+        form_layout.addWidget(self.taskPriority)
+        form_layout.addWidget(self.taskDueDate)
+        form_layout.addWidget(self.addTaskButton)
+
+        main_layout.addLayout(form_layout)
+        main_layout.addWidget(self.taskList)
+        main_layout.addWidget(self.showCompletedCheckbox)
+        main_layout.addWidget(self.deleteTaskButton)
+        main_layout.addWidget(self.toggleStatusButton)
+
+        # Set layout to central widget
+        central_widget.setLayout(main_layout)
+
+        # Connect signals and slots
+        self.addTaskButton.clicked.connect(self.addTask)
+        self.deleteTaskButton.clicked.connect(self.deleteTask)
+        self.toggleStatusButton.clicked.connect(self.toggleStatus)
+        self.showCompletedCheckbox.stateChanged.connect(self.updateTaskView)
+
+    def addTask(self):
+        taskName = self.taskName.text().strip()
+        priority = self.taskPriority.currentText()
+        dueDate = self.taskDueDate.date().toString('yyyy-MM-dd')
+
+        if not taskName:
+            QMessageBox.warning(self, 'Input Error', 'Task name cannot be empty!')
             return
 
-        due_date = None
-        if due_date_str:
-            try:
-                due_date = datetime.strptime(due_date_str, "%Y-%m-%d")
-            except ValueError:
-                print("Invalid date format. Task not added.")
+        if priority == 'Select task priority':
+            QMessageBox.warning(self, 'Input Error', 'Please select a task priority!')
+            return
+
+        if self.taskDueDate.date() < QDate.currentDate():
+            QMessageBox.warning(self, 'Input Error', 'Due date cannot be in the past!')
+            return
+
+        for index in range(self.taskList.count()):
+            existingTask = self.taskList.item(index).text()
+            if taskName in existingTask:
+                QMessageBox.warning(self, 'Duplicate Task', f"Task '{taskName}' already exists!")
                 return
 
-        self.tasks.append(Task(name, priority, due_date))
-        print(f"Task '{name}' added successfully!")
+        taskItem = f"{taskName} | Priority: {priority} | Due: {dueDate} | Status: Pending"
 
-    def view_tasks(self):
-        print("\n=== Task List ===")
-        if not self.tasks:
-            print("No tasks found!")
+        # Add task to the list
+        self.taskList.addItem(taskItem)
+
+        # Customize task appearance
+        listItem = self.taskList.item(self.taskList.count() - 1)
+        if priority == 'High':
+            listItem.setBackground(QBrush(QColor('red')))
+        elif priority == 'Medium':
+            listItem.setBackground(QBrush(QColor('yellow')))
+        else:
+            listItem.setBackground(QBrush(QColor('green')))
+
+        font = QFont()
+        font.setBold(True)
+        listItem.setFont(font)
+
+        # Clear inputs
+        self.taskName.clear()
+        self.taskPriority.setCurrentIndex(0)
+        self.taskDueDate.setDate(QDate.currentDate())
+
+        QMessageBox.information(self, 'Task Added', f"Task '{taskName}' has been added successfully!")
+
+    def deleteTask(self):
+        selectedItems = self.taskList.selectedItems()
+        if not selectedItems:
+            QMessageBox.warning(self, 'Selection Error', 'No task selected!')
             return
-        
-        sorted_tasks = sorted(
-            self.tasks,
-            key=lambda t: (
-                t.priority == "high",
-                t.priority == "medium",
-                not t.is_completed,
-            ),
-            reverse=True,
+
+        confirm = QMessageBox.question(
+            self,
+            'Confirm Deletion',
+            'Are you sure you want to delete the selected task(s)?',
+            QMessageBox.Yes | QMessageBox.No
         )
 
-        for index, task in enumerate(sorted_tasks, start=1):
-            print(f"{index}. {task}")
+        if confirm == QMessageBox.Yes:
+            for item in selectedItems:
+                self.taskList.takeItem(self.taskList.row(item))
 
-    def mark_task_completed(self):
-        self.view_tasks()
-        if not self.tasks:
-            return
-        
-        name = input("\nEnter the task name to mark as completed: ").strip()
-        task = next((t for t in self.tasks if t.name.lower() == name.lower()), None)
+            QMessageBox.information(self, 'Task Deleted', 'Selected task(s) have been deleted successfully!')
 
-        if task is None:
-            print("Task not found!")
-            return
-        
-        if task.is_completed:
-            print("Task is already completed!")
-            return
-        else:
-            task.is_completed = True
-            print(f"Task '{task.name}' marked as completed!")
-
-    def remove_task(self):
-        self.view_tasks()
-        if not self.tasks:
+    def toggleStatus(self):
+        selectedItems = self.taskList.selectedItems()
+        if not selectedItems:
+            QMessageBox.warning(self, 'Selection Error', 'No task selected!')
             return
 
-        try:
-            task_number = int(input("\nEnter the task number to remove: ").strip())
-            if task_number < 1 or task_number > len(self.tasks):
-                print("Invalid task number!")
-                return
+        for item in selectedItems:
+            text = item.text()
+            if 'Pending' in text:
+                item.setText(text.replace('Pending', 'Completed'))
+                item.setForeground(QBrush(QColor('gray')))
+            elif 'Completed' in text:
+                item.setText(text.replace('Completed', 'Pending'))
+                item.setForeground(QBrush(QColor('black')))
 
-            task = self.tasks.pop(task_number - 1)
-            print(f"Task '{task.name}' removed successfully!")
-        except ValueError:
-            print("Invalid input! Please enter a valid task number.")
+        QMessageBox.information(self, 'Status Toggled', 'Status of selected task(s) has been toggled!')
 
-    def main_menu(self):
-        while True:
-            print("\n=== Task Manager ===")
-            print("1. Add Task")
-            print("2. View Tasks")
-            print("3. Mark Task as Completed")
-            print("4. Remove Task")
-            print("5. Exit")
-
-            choice = input("Enter your choice: ").strip()
-            if choice == "1":
-                self.add_task()
-            elif choice == "2":
-                self.view_tasks()
-            elif choice == "3":
-                self.mark_task_completed()
-            elif choice == "4":
-                self.remove_task()
-            elif choice == "5":
-                print("Good Bye! Exiting Task Manager...")
-                break
+    def updateTaskView(self):
+        showCompleted = self.showCompletedCheckbox.isChecked()
+        for index in range(self.taskList.count()):
+            item = self.taskList.item(index)
+            if 'Completed' in item.text() and not showCompleted:
+                item.setHidden(True)
             else:
-                print("Invalid Choice. Please try again.")
+                item.setHidden(False)
 
-
-if __name__ == "__main__":
-    task_manager = TaskManager()
-    task_manager.main_menu()
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    ex = TaskManagerGUI()
+    ex.show()
+    sys.exit(app.exec_())
