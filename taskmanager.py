@@ -2,8 +2,58 @@ import sys
 from PyQt5.QtWidgets import (
     QApplication, QComboBox, QMainWindow, QVBoxLayout, QDateEdit, QWidget, QPushButton, QListWidget, QLineEdit, QHBoxLayout, QMessageBox, QCheckBox
 )
-from PyQt5.QtCore import QDate
+from PyQt5.QtCore import QDate, Qt
 from PyQt5.QtGui import QColor, QBrush, QFont, QIcon
+
+class StartPage(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle('Priority Task Manager')
+        self.setGeometry(100, 100, 1920, 1280)
+
+        # Create central widget
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+
+        # Layout
+        layout = QVBoxLayout()
+
+        # Add a button to start the task manager
+        self.planTaskButton = QPushButton('Get Started')
+        self.planTaskButton.setMinimumWidth(400)
+        self.planTaskButton.setMinimumHeight(100)
+        self.planTaskButton.setStyleSheet(
+            'QPushButton {'
+            'background-color: #FE0780; '
+            'color: white; '
+            'font-size: 18px; '
+            'padding: 10px; '
+            'border-radius: 10px;'
+            '}'
+            'QPushButton:hover {'
+            'background-color: darkred;'
+            '}'
+        )
+        self.planTaskButton.setCursor(Qt.PointingHandCursor)
+        self.planTaskButton.clicked.connect(self.openTaskManager)
+
+
+
+        # Add widgets to layout
+        layout.addWidget(self.planTaskButton, alignment=Qt.AlignCenter)
+
+        central_widget.setStyleSheet(
+            "background-image: url('/Users/iprincetech/Documents/Intro Software Programming/taskmanager/startupImage.jpg'); background-repeat: no-repeat; background-position: center;"
+        )
+        central_widget.setLayout(layout)
+
+    def openTaskManager(self):
+        self.taskManager = TaskManagerGUI()
+        self.taskManager.show()
+        self.close()
 
 class TaskManagerGUI(QMainWindow):
     def __init__(self):
@@ -12,7 +62,7 @@ class TaskManagerGUI(QMainWindow):
 
     def initUI(self):
         self.setWindowTitle('Priority Task Manager')
-        self.setGeometry(100, 100, 600, 400)
+        self.setGeometry(100, 100, 1920, 1280)
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -32,7 +82,6 @@ class TaskManagerGUI(QMainWindow):
         self.taskPriority.addItem(QIcon('high.png'), 'High')
         self.taskPriority.addItem(QIcon('medium.png'), 'Medium')
         self.taskPriority.addItem(QIcon('low.png'), 'Low')
-
 
         self.taskDueDate = QDateEdit()
         self.taskDueDate.setCalendarPopup(True)
@@ -162,6 +211,6 @@ class TaskManagerGUI(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = TaskManagerGUI()
-    ex.show()
+    startPage = StartPage()
+    startPage.show()
     sys.exit(app.exec_())
