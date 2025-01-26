@@ -14,14 +14,11 @@ class StartPage(QMainWindow):
         self.setWindowTitle('Priority Task Manager')
         self.setGeometry(100, 100, 1920, 1280)
 
-        # Create central widget
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
-        # Layout
         layout = QVBoxLayout()
 
-        # Add a button to start the task manager
         self.planTaskButton = QPushButton('Get Started')
         self.planTaskButton.setMinimumWidth(400)
         self.planTaskButton.setMinimumHeight(100)
@@ -41,12 +38,10 @@ class StartPage(QMainWindow):
         self.planTaskButton.clicked.connect(self.openTaskManager)
 
 
-
-        # Add widgets to layout
         layout.addWidget(self.planTaskButton, alignment=Qt.AlignCenter)
 
         central_widget.setStyleSheet(
-            "background-image: url('/Users/iprincetech/Documents/Intro Software Programming/taskmanager/startupImage.jpg'); background-repeat: no-repeat; background-position: center;"
+            "background-image: url('startupImage.jpg'); background-repeat: no-repeat; background-position: center;"
         )
         central_widget.setLayout(layout)
 
@@ -95,7 +90,7 @@ class TaskManagerGUI(QMainWindow):
         self.showCompletedCheckbox = QCheckBox('Show Completed Tasks')
         self.showCompletedCheckbox.setChecked(True)
 
-        # Add widgets to layouts
+        # widgets + layouts
         form_layout.addWidget(self.taskName)
         form_layout.addWidget(self.taskPriority)
         form_layout.addWidget(self.taskDueDate)
@@ -107,10 +102,9 @@ class TaskManagerGUI(QMainWindow):
         main_layout.addWidget(self.deleteTaskButton)
         main_layout.addWidget(self.toggleStatusButton)
 
-        # Set layout to central widget
         central_widget.setLayout(main_layout)
 
-        # Connect signals and slots
+        # signals and slots connection
         self.addTaskButton.clicked.connect(self.addTask)
         self.deleteTaskButton.clicked.connect(self.deleteTask)
         self.toggleStatusButton.clicked.connect(self.toggleStatus)
@@ -141,10 +135,8 @@ class TaskManagerGUI(QMainWindow):
 
         taskItem = f"{taskName} | Priority: {priority} | Due: {dueDate} | Status: Pending"
 
-        # Add task to the list
+       
         self.taskList.addItem(taskItem)
-
-        # Customize task appearance
         listItem = self.taskList.item(self.taskList.count() - 1)
         if priority == 'High':
             listItem.setBackground(QBrush(QColor('red')))
@@ -157,7 +149,6 @@ class TaskManagerGUI(QMainWindow):
         font.setBold(True)
         listItem.setFont(font)
 
-        # Clear inputs
         self.taskName.clear()
         self.taskPriority.setCurrentIndex(0)
         self.taskDueDate.setDate(QDate.currentDate())
