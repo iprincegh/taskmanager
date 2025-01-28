@@ -11,8 +11,8 @@ class StartPage(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle('Priority Task Manager')
-        self.setGeometry(100, 100, 1920, 1280)
+        self.setWindowTitle('Task Manager')
+        self.setGeometry(100, 100, 1024, 1024)
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -20,15 +20,17 @@ class StartPage(QMainWindow):
         layout = QVBoxLayout()
 
         self.planTaskButton = QPushButton('Get Started')
-        self.planTaskButton.setMinimumWidth(400)
-        self.planTaskButton.setMinimumHeight(100)
+        self.planTaskButton.setFixedSize(200, 50)
         self.planTaskButton.setStyleSheet(
             'QPushButton {'
-            'background-color: #FE0780; '
+            'background-color: white; '
             'color: white; '
             'font-size: 18px; '
             'padding: 10px; '
             'border-radius: 10px;'
+            'background-image: url("buttonImage.jpg");'
+            'background-repeat: no-repeat;'
+            'background-position: center;'
             '}'
             'QPushButton:hover {'
             'background-color: darkred;'
@@ -38,10 +40,10 @@ class StartPage(QMainWindow):
         self.planTaskButton.clicked.connect(self.openTaskManager)
 
 
-        layout.addWidget(self.planTaskButton, alignment=Qt.AlignCenter)
+        layout.addWidget(self.planTaskButton, alignment=Qt.AlignCenter | Qt.AlignBottom)
 
         central_widget.setStyleSheet(
-            "background-image: url('startupImage.jpg'); background-repeat: no-repeat; background-position: center;"
+            "background-image: url('startupImage.png'); background-repeat: no-repeat; background-position: center;"
         )
         central_widget.setLayout(layout)
 
@@ -57,7 +59,7 @@ class TaskManagerGUI(QMainWindow):
 
     def initUI(self):
         self.setWindowTitle('Priority Task Manager')
-        self.setGeometry(100, 100, 1920, 1280)
+        self.setGeometry(100, 100, 1024, 1024)
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
